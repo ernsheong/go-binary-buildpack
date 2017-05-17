@@ -39,8 +39,9 @@ ensureGo() {
                     mkdir -p "${goVersion}"
                     step "Directory complete..."
                     pushd "${goVersion}" &> /dev/null
-                        step "About to download..."
+                        step "About to download $goFile..."
                         local url="https://github.com/golang/go/archive/$goFile"
+                        step "Download url: $url"
                         start "Downloading Go version ${goVersion}"
                             ${CURL} ${url} | tar zxf -
                             mv ${goFile}* go
