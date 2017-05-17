@@ -22,7 +22,6 @@ ensureGo() {
     local goVersion="${1}"
     local goPath="${cache}/${goVersion}/go"
     local goFile=""
-    step "Go version: ${goVersion}"
 
     if [ -d "${goPath}" ]; then
         step "Using ${goVersion}"
@@ -40,7 +39,7 @@ ensureGo() {
                         local url="https://codeload.github.com/golang/go/tar.gz/$goFile"
                         start "Downloading Go version ${goVersion} from $url"
                             ${CURL} ${url} | tar zxf -
-                            mv ${goFile}* go
+                            mv go-${goFile}* go
                         finished
                         step "Compiling Go version ${goVersion}"
                         pushd go/src &> /dev/null
