@@ -22,6 +22,8 @@ ensureGo() {
     local goVersion="${1}"
     local goPath="${cache}/${goVersion}/go"
     local goFile=""
+    step "Go version: ${goVersion}"
+
     if [ -d "${goPath}" ]; then
         step "Using ${goVersion}"
     else
@@ -29,8 +31,6 @@ ensureGo() {
         goFile="${goVersion}.tar.gz"
 
         step "Installing ${goVersion}"
-        # ensureFile "${goFile}" "${goPath}" "tar -C ${goPath} --strip-components=1 -zxf"
-        rm -f "${goPath}/${goFile}"
 
         case "${goVersion}" in
             *)
