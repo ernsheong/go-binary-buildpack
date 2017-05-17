@@ -44,7 +44,7 @@ downloadFile() {
     local fileName="${1}"
     local targetDir="${2}"
     local xCmd="${3}"
-    local localName="$(determinLocalFileName "${fileName}")"
+    local localName="${fileName}"
     local targetFile="${targetDir}/${localName}"
 
     mkdir -p "${targetDir}"
@@ -68,24 +68,26 @@ downloadFile() {
     popd &> /dev/null
 }
 
+# TODO: SHA CHECK
 SHAValid() {
-    local fileName="${1}"
-    local targetFile="${2}"
-    local sh=""
-    local sw="$(<"${FilesJSON}" jq -r '."'${fileName}'".SHA')"
-    if [ ${#sw} -eq 40 ]; then
-        sh="$(shasum "${targetFile}" | cut -d \  -f 1)"
-    else
-        sh="$(shasum -a256 "${targetFile}" | cut -d \  -f 1)"
-    fi
-    [ "${sh}" = "${sw}" ]
+    # local fileName="${1}"
+    # local targetFile="${2}"
+    # local sh=""
+    # local sw="$(<"${FilesJSON}" jq -r '."'${fileName}'".SHA')"
+    # if [ ${#sw} -eq 40 ]; then
+    #     sh="$(shasum "${targetFile}" | cut -d \  -f 1)"
+    # else
+    #     sh="$(shasum -a256 "${targetFile}" | cut -d \  -f 1)"
+    # fi
+    # [ "${sh}" = "${sw}" ]
+    return 1
 }
 
 ensureFile() {
     local fileName="${1}"
     local targetDir="${2}"
     local xCmd="${3}"
-    local localName="$(determinLocalFileName "${fileName}")"
+    local localName="${fileName}"
     local targetFile="${targetDir}/${localName}"
     local download="false"
     if [ ! -f "${targetFile}" ]; then
@@ -109,8 +111,7 @@ ensureInPath() {
     local fileName="${1}"
     local targetDir="${2}"
     local xCmd="${3:-chmod a+x}"
-    local localName="$(determinLocalFileName "${fileName}")"
-    local targetFile="${targetDir}/${localName}"
+    local targetFile="${targetDir}/${fileName}"
     addToPATH "${targetDir}"
     ensureFile "${fileName}" "${targetDir}" "${xCmd}"
 }
