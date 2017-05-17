@@ -44,16 +44,12 @@ downloadFile() {
     local fileName="${1}"
     local targetDir="${2}"
     local xCmd="${3}"
-    local localName="${fileName}"
-    local targetFile="${targetDir}/${localName}"
+    local targetFile="${targetDir}/${fileName}"
 
     mkdir -p "${targetDir}"
     pushd "${targetDir}" &> /dev/null
         start "Fetching ${localName}"
             ${CURL} -O "${BucketURL}/${fileName}"
-            if [ "${fileName}" != "${localName}" ]; then
-                mv "${fileName}" "${localName}"
-            fi
             if [ -n "${xCmd}" ]; then
                 ${xCmd} ${targetFile}
             fi
