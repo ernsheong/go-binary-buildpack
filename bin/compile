@@ -1,0 +1,152 @@
+#!/usr/bin/env bash
+# bin/compile <build-dir> <cache-dir>
+
+#!/bin/bash
+# usage: bin/compile <build-dir> <cache-dir> <env-dir>
+
+set -eo pipefail
+
+mkdir -p "$1" "$2"
+build=$(cd "$1/" && pwd)
+cache=$(cd "$2/" && pwd)
+env_dir="${3}"
+
+buildpack=$(cd "$(dirname $0)/.." && pwd)
+source "${buildpack}/lib/common.sh"
+
+DefaultGoVersion=1.8.1
+
+ensureGo() {
+    local goVersion="${1}"
+    local goPath="${cache}/${goVersion}/go"
+    local goFile=""
+    local txt="Installing ${goVersion}"
+    if [ -d "${goPath}" ]; then
+        step "Using ${goVersion}"
+    else
+        rm -rf ${cache}/* #For a go version change, we delete everything
+        case "${goVersion}" in
+            devel*)
+                local bGoVersion="$(expandVer ${DefaultGoVersion})"
+                goFile="${bGoVersion}.linux-amd64.tar.gz"
+                goPath="${cache}/${bGoVersion}/go"
+                txt="Installing bootstrap ${bGoVersion}"
+            ;;
+            go1)
+                goFile="go.go1.linux-amd64.tar.gz"
+            ;;
+            *)
+                goFile="${goVersion}.linux-amd64.tar.gz"
+            ;;
+        esac
+
+        step "${txt}"
+        ensureFile "${goFile}" "${goPath}" "tar -C ${goPath} --strip-components=1 -zxf"
+        rm -f "${goPath}/${goFile}"
+
+        case "${goVersion}" in
+            devel*)
+                pushd "${cache}" &> /dev/null
+                    mkdir -p "${goVersion}"
+                    pushd "${goVersion}" &> /dev/null
+                        local sha=$(echo ${goVersion} | cut -d - -f 2)  #assumes devel-<short sha> or devel-<full sha>
+                        local url="https://github.com/golang/go/archive/$sha.tar.gz"
+                        start "Downloading development Go version ${goVersion}"
+                            ${CURL} ${url} | tar zxf -
+                            mv go-${sha}* go
+                        finished
+                        step "Compiling development Go version ${goVersion}"
+                        pushd go/src &> /dev/null
+                            echo "devel +${sha} $(date "+%a %b %H:%M:%S %G %z")"> ../VERSION
+                            GOROOT_BOOTSTRAP=$(pushd ${cache}/${bGoVersion}/go > /dev/null; pwd; popd > /dev/null) ./make.bash 2>&1
+                        popd &> /dev/null
+                        go/bin/go version
+                        rm -rf "${goPath}"
+                    popd &> /dev/null
+                popd &> /dev/null
+                goPath="${cache}/${goVersion}/go"
+            ;;
+            *)
+            ;;
+        esac
+    fi
+
+    export GOROOT="${goPath}"
+    PATH="${goPath}/bin:${PATH}"
+}
+
+loadEnvDir "${env_dir}"
+
+ver=$(expandVer $ver)
+
+if [ -e "${build}/bin" -a ! -d "${build}/bin" ]; then
+    err ""
+    err "File bin exists and is not a directory."
+    err ""
+    exit 1
+fi
+
+ensureGo "${ver}"
+
+mkdir -p "${build}/bin"
+
+# If $GO_LINKER_SYMBOL and GO_LINKER_VALUE are set, tell the linker to DTRT
+FLAGS=(-tags heroku)
+if [ -n "${GO_LINKER_SYMBOL}" -a -n "${GO_LINKER_VALUE}" ]; then
+    case "${ver}" in
+        go1.0*|go1.1*|go1.2*|go1.3*|go1.4*)
+            xval="${GO_LINKER_SYMBOL} ${GO_LINKER_VALUE}"
+        ;;
+        *)
+            xval="${GO_LINKER_SYMBOL}=${GO_LINKER_VALUE}"
+        ;;
+    esac
+    FLAGS=(${FLAGS[@]} -ldflags "-X ${xval}")
+fi
+
+export GOPATH
+
+if [ -n "${src}" -a "${src}" != "${build}" -a -e "${src}/Procfile" ]; then
+    mv -t "${build}" "${src}/Procfile"
+fi
+
+if [ ! -e $build/Procfile -a -n "${name}" ]; then
+    echo -e "web: $(basename $name)" >> $build/Procfile
+fi
+
+cd $build
+mkdir -p $build/.profile.d
+echo 'PATH=$PATH:$HOME/bin' > $build/.profile.d/go.sh
+
+if [ "${GO_INSTALL_TOOLS_IN_IMAGE}" = "true" ]; then
+    start "Copying go tool chain to \$GOROOT=\$HOME/.heroku/go"
+        mkdir -p "${build}/.heroku/go"
+        cp -a "${GOROOT}/"* "${build}/.heroku/go"
+        echo 'export GOROOT=$HOME/.heroku/go' > "${build}/.profile.d/goroot.sh"
+        echo 'PATH=$PATH:$GOROOT/bin' >> "${build}/.profile.d/goroot.sh"
+    finished
+    if which ${TOOL} &> /dev/null; then
+      step "Copying ${TOOL} binary"
+      cp $(which ${TOOL}) "${build}/bin"
+    fi
+fi
+
+if [ "${GO_SETUP_GOPATH_IN_IMAGE}" = "true" ]; then
+    start "Cleaning up \$GOPATH/pkg"
+        rm -rf $GOPATH/pkg
+    finished
+    echo 'export GOPATH=$HOME' > "${build}/.profile.d/zzgopath.sh"  #Try to make sure it's down in towards the end
+    echo 'cd $GOPATH/src/'${name} >> "${build}/.profile.d/zzgopath.sh" # because of this
+fi
+
+# if needConcurrency ${ver}; then
+#     cp $buildpack/vendor/concurrency.sh $build/.profile.d/
+# fi
+
+# t="${build}/.heroku/go"
+# mkdir -p "${t}"
+# t="${t}/.meta"
+# echo "TOOL=${TOOL}" > "${t}"
+# if [ "${TOOL}" != "gb" ]; then
+#     echo "NAME=${name}" >> "${t}"
+# fi
