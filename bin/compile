@@ -27,10 +27,10 @@ ensureGo() {
         rm -rf ${cache}/* #For a go version change, we delete everything
         case "${goVersion}" in
             devel*)
-                local bGoVersion="$(expandVer ${DefaultGoVersion})"
-                goFile="${bGoVersion}.linux-amd64.tar.gz"
-                goPath="${cache}/${bGoVersion}/go"
-                txt="Installing bootstrap ${bGoVersion}"
+                goVersion="${DefaultGoVersion}"
+                goFile="${goVersion}.linux-amd64.tar.gz"
+                goPath="${cache}/${goVersion}/go"
+                txt="Installing bootstrap ${goVersion}"
             ;;
             go1)
                 goFile="go.go1.linux-amd64.tar.gz"
@@ -76,8 +76,6 @@ ensureGo() {
 }
 
 loadEnvDir "${env_dir}"
-
-ver=$(expandVer $ver)
 
 if [ -e "${build}/bin" -a ! -d "${build}/bin" ]; then
     err ""
