@@ -28,21 +28,17 @@ ensureGo() {
         step "Using ${goVersion}"
     else
         rm -rf ${cache}/* #For a go version change, we delete everything
-        goFile="${goVersion}.tar.gz"
+        goFile="go${goVersion}"
 
         step "Installing ${goVersion}"
 
         case "${goVersion}" in
             *)
                 pushd "${cache}" &> /dev/null
-                    step "Making directory..."
                     mkdir -p "${goVersion}"
-                    step "Directory complete..."
                     pushd "${goVersion}" &> /dev/null
-                        step "About to download $goFile..."
-                        local url="https://github.com/golang/go/archive/$goFile"
-                        step "Download url: $url"
-                        start "Downloading Go version ${goVersion}"
+                        local url="https://codeload.github.com/golang/go/tar.gz/$goFile"
+                        start "Downloading Go version ${goVersion} from $url"
                             ${CURL} ${url} | tar zxf -
                             mv ${goFile}* go
                         finished
