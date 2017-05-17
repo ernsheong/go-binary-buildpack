@@ -35,8 +35,11 @@ ensureGo() {
         case "${goVersion}" in
             *)
                 pushd "${cache}" &> /dev/null
+                    step "Making directory..."
                     mkdir -p "${goVersion}"
+                    step "Directory complete..."
                     pushd "${goVersion}" &> /dev/null
+                        step "About to download..."
                         local url="https://github.com/golang/go/archive/$goFile"
                         start "Downloading Go version ${goVersion}"
                             ${CURL} ${url} | tar zxf -
