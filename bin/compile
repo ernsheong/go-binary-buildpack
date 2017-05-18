@@ -36,7 +36,7 @@ ensureGo() {
             pushd "${goVersion}" &> /dev/null
                 local url="https://storage.googleapis.com/golang/${goFile}"
                 start "Downloading Go ${goVersion} from $url"
-                    # ${CURL} -O ${url}
+                    ${CURL} -O ${url}
                     local dirname=$(tar -tzf ${goFile} | head -1 | cut -f1 -d"/")
                     tar -xzf ${goFile}
                     rm ${goFile}
