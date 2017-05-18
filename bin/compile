@@ -27,33 +27,23 @@ ensureGo() {
         step "Using ${goVersion}"
     else
         rm -rf ${cache}/* #For a go version change, we delete everything
-        goFile="go${goVersion}"
+        goFile="go${goVersion}.linux-amd64.tar.gz"
 
         step "Installing ${goVersion}"
 
-        case "${goVersion}" in
-            *)
-                pushd "${cache}" &> /dev/null
-                    mkdir -p "${goVersion}"
-                    pushd "${goVersion}" &> /dev/null
-                        local url="https://codeload.github.com/golang/go/tar.gz/$goFile"
-                        start "Downloading Go version ${goVersion} from $url"
-                            ${CURL} ${url} | tar zxf -
-                            mv go-${goFile}* go
-                        finished
-                        step "Compiling Go version ${goVersion}"
-                        pushd go/src &> /dev/null
-                            GOROOT_BOOTSTRAP=$(pushd ${cache}/${goVersion}/go > /dev/null; pwd; popd > /dev/null) ./make.bash 2>&1
-                            step "Setting GOROOT_BOOTSTRAP: $GOROOT_BOOTSTRAP"
-                        popd &> /dev/null
-                        step "go/bin/go version:"
-                        go/bin/go version
-                        rm -rf "${goPath}"
-                    popd &> /dev/null
-                popd &> /dev/null
-                goPath="${cache}/${goVersion}/go"
-            ;;
-        esac
+        pushd "${cache}" &> /dev/null
+            mkdir -p "${goVersion}"
+            pushd "${goVersion}" &> /dev/null
+                local url="https://storage.googleapis.com/golang/${goFile}"
+                start "Downloading Go ${goVersion} from $url"
+                    # ${CURL} -O ${url}
+                    local dirname=$(tar -tzf ${goFile} | head -1 | cut -f1 -d"/")
+                    tar -xzf ${goFile}
+                    rm ${goFile}
+                finished
+            popd &> /dev/null
+        popd &> /dev/null
+        goPath="${cache}/${goVersion}/go"
     fi
 
     export GOROOT="${goPath}"

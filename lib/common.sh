@@ -13,8 +13,6 @@ RED='\033[1;31m'
 NC='\033[0m' # No Color
 CURL="curl -s -L --retry 15 --retry-delay 2" # retry for up to 30 seconds
 
-BucketURL="https://heroku-golang-prod.s3.amazonaws.com"
-
 TOOL=""
 # Default to $SOURCE_VERSION environment variable: https://devcenter.heroku.com/articles/buildpack-api#bin-compile
 GO_LINKER_VALUE=${SOURCE_VERSION}
@@ -40,30 +38,6 @@ finished() {
     echo "done"
 }
 
-downloadFile() {
-    local fileName="${1}"
-    local targetDir="${2}"
-    local xCmd="${3}"
-    local targetFile="${targetDir}/${fileName}"
-
-    mkdir -p "${targetDir}"
-    pushd "${targetDir}" &> /dev/null
-        start "Fetching ${localName}"
-            ${CURL} -O "${BucketURL}/${fileName}"
-            if [ -n "${xCmd}" ]; then
-                ${xCmd} ${targetFile}
-            fi
-            if ! SHAValid "${fileName}" "${targetFile}"; then
-                err ""
-                err "Downloaded file (${fileName}) sha does not match recorded SHA"
-                err "Unable to continue."
-                err ""
-                exit 1
-            fi
-        finished
-    popd &> /dev/null
-}
-
 # TODO: SHA CHECK
 SHAValid() {
     # local fileName="${1}"
@@ -77,23 +51,6 @@ SHAValid() {
     # fi
     # [ "${sh}" = "${sw}" ]
     return 1
-}
-
-ensureFile() {
-    local fileName="${1}"
-    local targetDir="${2}"
-    local xCmd="${3}"
-    local localName="${fileName}"
-    local targetFile="${targetDir}/${localName}"
-    local download="false"
-    if [ ! -f "${targetFile}" ]; then
-        download="true"
-    elif ! SHAValid "${fileName}" "${targetFile}"; then
-        download="true"
-    fi
-    if [ "${download}" = "true" ]; then
-        downloadFile "${fileName}" "${targetDir}" "${xCmd}"
-    fi
 }
 
 addToPATH() {
