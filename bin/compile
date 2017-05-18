@@ -44,7 +44,9 @@ ensureGo() {
                         step "Compiling Go version ${goVersion}"
                         pushd go/src &> /dev/null
                             GOROOT_BOOTSTRAP=$(pushd ${cache}/${goVersion}/go > /dev/null; pwd; popd > /dev/null) ./make.bash 2>&1
+                            step "Setting GOROOT_BOOTSTRAP: $GOROOT_BOOTSTRAP"
                         popd &> /dev/null
+                        step "go/bin/go version:"
                         go/bin/go version
                         rm -rf "${goPath}"
                     popd &> /dev/null
