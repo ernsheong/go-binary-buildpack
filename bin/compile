@@ -26,7 +26,7 @@ ensureGo() {
     if [ -d "${goPath}" ]; then
         step "Using ${goVersion}"
     else
-        # rm -rf ${cache}/* #For a go version change, we delete everything
+        rm -rf ${cache}/* #For a go version change, we delete everything
         goFile="go${goVersion}"
 
         step "Installing ${goVersion}"
@@ -37,10 +37,10 @@ ensureGo() {
                     mkdir -p "${goVersion}"
                     pushd "${goVersion}" &> /dev/null
                         local url="https://codeload.github.com/golang/go/tar.gz/$goFile"
-                        # start "Downloading Go version ${goVersion} from $url"
-                        #     ${CURL} ${url} | tar zxf -
-                        #     mv go-${goFile}* go
-                        # finished
+                        start "Downloading Go version ${goVersion} from $url"
+                            ${CURL} ${url} | tar zxf -
+                            mv go-${goFile}* go
+                        finished
                         step "Compiling Go version ${goVersion}"
                         pushd go/src &> /dev/null
                             GOROOT_BOOTSTRAP=$(pushd ${cache}/${goVersion}/go > /dev/null; pwd; popd > /dev/null) ./make.bash 2>&1
