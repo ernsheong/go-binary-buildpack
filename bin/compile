@@ -26,7 +26,7 @@ ensureGo() {
     if [ -d "${goPath}" ]; then
         step "Using ${goVersion}"
     else
-        rm -rf ${cache}/* #For a go version change, we delete everything
+        # rm -rf ${cache}/* #For a go version change, we delete everything
         goFile="go${goVersion}"
 
         step "Installing ${goVersion}"
