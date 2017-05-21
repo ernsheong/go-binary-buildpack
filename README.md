@@ -1,42 +1,36 @@
 # Go Binary Buildpack
 
-Use Go Binary Buildpack if you need Heroku (or Flynn) to build and deploy a Go binary.
+Use Go Binary Buildpack if you need Heroku/Flynn (or any other similar PaaS) to build and deploy a Go binary.
 
-Provides the `go` command so that you can build your apps on the fly in Heroku (`go build`), without pulling in external vendor dependencies.
-Assumes that you have all your dependencies in `vendor`.
+1. Builds main.go located in `GO_INSTALL_PACKAGE_SPEC`, e.g. "github.com/path/to/project/root". `GO_INSTALL_PACKAGE_SPEC` must be set. (For more advanced use cases please open an issue/PR.)
+2. Assumes that you have all your dependencies in `vendor`. Go Binary Buildpack does not run any package manager scripts.
+3. Runs the `main` binary file.
 
-Based on https://github.com/heroku/heroku-buildpack-go and https://github.com/ryandotsmith/null-buildpack.
+Buildpack was based on https://github.com/heroku/heroku-buildpack-go and https://github.com/ryandotsmith/null-buildpack.
 
-## Usage (TODO)
+## Usage
 
-Create a directory for our Heroku app:
-
-```bash
-$ mkdir -p myapp/bin
-$ cd myapp
-```
-
-Here is an example of an executable that will run on 64bit linux machine:
+Create a directory for your Heroku Golang app:
 
 ```bash
-$ echo -e "#\!/usr/bin/env bash\n echo hello world" > ./bin/program
-$ echo -e "program: bin/program" > Procfile
-$ chmod +x ./bin/program
-$ ./bin/program
-hello world
+$ mkdir -p github.com/path/to/your/project
+$ cd github.com/path/to/your/project
+$ touch main.go
+
+package main
+import "fmt"
+func main() {
+    fmt.Println("hello world")
+}
 ```
 
 Push the app to Heroku and run our executable:
 
 ```bash
-$ git init; git add .; git commit -am 'init'
+$ git init; git add .; git commit -am 'Initial commit'
 $ heroku create --buildpack http://github.com/ernsheong/go-binary-buildpack.git
 $ git push heroku master
-$ heroku run program
-Running `program` attached to terminal... up, run.8663
 hello world
 ```
 
-## Issues
-
-You will need to make sure that a 64bit linux machine can execute the binary.
+For Flynn see https://flynn.io/docs/apps#buildpacks for Flynn instructions.
