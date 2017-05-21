@@ -100,4 +100,4 @@ eval "$(setupGOPATH ${GO_INSTALL_PACKAGE_SPEC})"
 
 # Build main binary and add to Procfile.
 go build ${src}/main.go
-echo -e "web: sh main" > $build/Procfile
+echo -e "web: ./main" > ${build}/Procfile
